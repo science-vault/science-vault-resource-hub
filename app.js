@@ -176,7 +176,23 @@ function open(row) {
     key.onclick = () => preview(row.answer, row.answerPreview, name, false);
     $('actions').append(action, key, link('Open ' + name, row.answer));
   }
-  for (const related of row.related) $('actions').append(link(related.title, related.href));
+  const files = $('related-files');
+  files.replaceChildren();
+  files.hidden = !row.related.length;
+  if (row.related.length) {
+    files.append(element('h3', 'Related documents'));
+    const list = element('ul');
+    for (const related of row.related) {
+      const item = element('li');
+      const show = element('button', 'Preview');
+      show.setAttribute('aria-label', 'Preview ' + related.title);
+      show.onclick = () => preview(related.href, related.preview, related.title, false);
+      item.append(link(related.title, related.href), ' ', show);
+      list.append(item);
+    }
+    files.append(list);
+    if (!row.answer) $('actions').append(action);
+  }
   action.onclick();
   $('detail').showModal();
 }
@@ -204,7 +220,7 @@ for (const [kind, [title, repo]] of Object.entries(collections)) {
   $('collections').append(button);
   if (!repo) continue;
   $('sources').append(link(repo === 'exam-library' ? 'Exam Library' : repo === 'school-resource-library' ? 'School Assessment Library' : title, 'https://science-vault.github.io/' + repo + '/'));
-  fetch(kind + '.json').then(response => {
+  fetch(kind + '.json', { cache: 'no-cache' }).then(response => {
     if (!response.ok) throw Error('Catalogue unavailable');
     return response.json();
   }).then(resources => {
