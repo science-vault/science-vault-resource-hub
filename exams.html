@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#081725">
 <title>Exams · Science Vault Resource Hub</title>
-<link rel="stylesheet" href="style.css?v=live-collections-1">
-<script type="module" src="app.js?v=live-collections-1"></script>
+<link rel="stylesheet" href="style.css?v=collection-filters-2">
+<script type="module" src="app.js?v=collection-filters-2"></script>
 </head>
 <body data-collection="exams">
 <a class="skip" href="#query">Skip to search</a>
@@ -30,12 +30,14 @@
 </section>
 <nav id="collections" aria-label="Resource collections"></nav>
 <section class="catalogue" id="catalogue" aria-labelledby="catalogue-title">
-<div class="catalogue-head"><h2 id="catalogue-title">Exams catalogue</h2><label class="sort">Sort <select id="sort"><option value="title">Title A–Z</option><option value="newest">Recently added</option></select></label></div>
+<div class="catalogue-head"><h2 id="catalogue-title">Exams catalogue</h2><div class="catalogue-options"><label class="sort">Sort by <select id="sort"><option value="title">Title A–Z</option><option value="newest">Recently added</option><option value="year">Year level</option></select></label></div></div>
 <div class="filters">
-<label>Year level<select id="year"></select></label>
-<label>Subject<select id="subject"></select></label>
-<label>Strand<select id="strand"></select></label>
-<label>Topic<select id="topic"></select></label>
+<label>Year level<select id="year" data-all="All year levels"><option value="">All year levels</option></select></label>
+<label>Subject<select id="subject" data-all="All subjects"><option value="">All subjects</option></select></label>
+<label>Topic<select id="topic" data-all="All topics"><option value="">All topics</option></select></label>
+<label>School / provider<select id="school" data-all="All schools / providers"><option value="">All schools / providers</option></select></label>
+<label>Exam year<select id="examYear" data-all="All exam years"><option value="">All exam years</option></select></label>
+<label>Exam type<select id="examType" data-all="All exam types"><option value="">All exam types</option></select></label>
 <button id="clear" type="button">Clear filters</button>
 </div>
 <div class="results-bar"><p id="status" role="status">Loading catalogue…</p></div>

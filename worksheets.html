@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#081725">
 <title>Worksheets · Science Vault Resource Hub</title>
-<link rel="stylesheet" href="style.css?v=live-collections-1">
-<script type="module" src="app.js?v=live-collections-1"></script>
+<link rel="stylesheet" href="style.css?v=collection-filters-2">
+<script type="module" src="app.js?v=collection-filters-2"></script>
 </head>
 <body data-collection="worksheets">
 <a class="skip" href="#query">Skip to search</a>
@@ -30,12 +30,17 @@
 </section>
 <nav id="collections" aria-label="Resource collections"></nav>
 <section class="catalogue" id="catalogue" aria-labelledby="catalogue-title">
-<div class="catalogue-head"><h2 id="catalogue-title">Worksheets catalogue</h2><label class="sort">Sort <select id="sort"><option value="title">Title A–Z</option><option value="newest">Recently added</option></select></label></div>
+<div class="catalogue-head"><h2 id="catalogue-title">Worksheets catalogue</h2><div class="catalogue-options"><label class="sort">Sort by <select id="sort"><option value="curriculum">Curriculum order</option><option value="newest">Recently added</option></select></label><label class="sort">Resources per page <select id="pageSize"><option>20</option><option selected>40</option><option>60</option><option>100</option></select></label></div></div>
 <div class="filters">
-<label>Year level<select id="year"></select></label>
-<label>Subject<select id="subject"></select></label>
-<label>Strand<select id="strand"></select></label>
-<label>Topic<select id="topic"></select></label>
+<label>Publisher<select id="publisher" data-all="All publishers"><option value="">All publishers</option></select></label>
+<label>Source category<select id="publisherCategory" data-all="All source categories"><option value="">All source categories</option></select></label>
+<label>Learning area<select id="area" data-all="All learning areas"><option value="">All learning areas</option></select></label>
+<label>Subject<select id="subject" data-all="All subjects"><option value="">All subjects</option></select></label>
+<label>Year level<select id="year" data-all="All year levels"><option value="">All year levels</option></select></label>
+<label>Strand<select id="strand" data-all="All strands"><option value="">All strands</option></select></label>
+<label>Topic<select id="topic" data-all="All topics"><option value="">All topics</option></select></label>
+<label>Collection<select id="collection" data-all="All resources"><option value="">All resources</option></select></label>
+<label>Resource type<select id="resourceTypes" data-all="All resource types"><option value="">All resource types</option></select></label>
 <button id="clear" type="button">Clear filters</button>
 </div>
 <div class="results-bar"><p id="status" role="status">Loading catalogue…</p></div>

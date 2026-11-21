@@ -1,4 +1,4 @@
-import { getSourceUrl, normalizeCatalogue } from './live-catalogue.mjs';
+import { getSourceUrl, normalizeCatalogue } from './live-catalogue.mjs?v=collection-filters-2';
 'use strict';
 
 const collections = {
@@ -8,12 +8,10 @@ const collections = {
   videos: ['Videos', 'video-library'],
   worksheets: ['Worksheets', 'worksheet-vault'],
 };
-const filters = ['year', 'subject', 'strand', 'topic'];
-const labels = ['All years', 'All subjects', 'All strands', 'All topics'];
+const filters = [...document.querySelectorAll('.filters select')].map(menu => menu.id);
 const $ = id => document.getElementById(id);
 const number = new Intl.NumberFormat('en-AU');
 const collator = new Intl.Collator('en-AU', { numeric: true, sensitivity: 'base' });
-const pageSize = 24;
 const collectionIcons = { all: '▦', assessments: '▤', exams: '▣', textbooks: '▥', videos: '▷', worksheets: '▧' };
 const rows = [];
 const selected = document.body.dataset.collection;
@@ -36,10 +34,39 @@ function link(label, url) {
   return anchor;
 }
 
+const optionLabels = {
+  curriculum: 'SCSA curriculum topics', extra: 'Extra Worksheets', unspecified: 'Year not specified',
+  answers: 'With answers / marking key', support: 'With supporting resources', unlinked: 'Unlinked answer files',
+};
+
 function values(row, field) {
-  if (field === 'year') return row.years;
-  if (field === 'subject') return [row.subject, row.area].filter(Boolean);
-  return row[field] ? [row[field]] : [];
+  if (field === 'year') return row.years.length || row.kind !== 'assessments' ? row.years : ['unspecified'];
+  if (field === 'school') return [row.school || row.publisher].filter(Boolean);
+  if (field === 'collection') return [row.collection || 'curriculum'];
+  if (field === 'resourceTypes') return row.resourceTypes || [row.format || 'Worksheet'];
+  if (field === 'fileFormats') return row.fileFormats || [row.format].filter(Boolean);
+  if (field === 'materials') {
+    return [
+      (row.answer || row.integratedAnswers) && !row.unlinkedAnswer && 'answers',
+      row.supportCount && row.related?.length && 'support',
+      (row.unlinkedAnswer || row.role === 'Answers / marking key') && 'unlinked',
+    ].filter(Boolean);
+  }
+  const value = row[field];
+  return (Array.isArray(value) ? value : [value]).filter(value => value != null && value !== '').map(String);
+}
+
+function yearOrder(row) {
+  return Number.parseInt(row.years[0], 10) || 99;
+}
+
+function compareRows(a, b, sort) {
+  if (sort === 'newest') return (Date.parse(b.added) || 0) - (Date.parse(a.added) || 0);
+  if (sort === 'school') return collator.compare(a.school || a.publisher || '', b.school || b.publisher || '');
+  if (sort === 'year') return yearOrder(a) - yearOrder(b);
+  if (sort === 'curriculum') return Number(a.collection === 'extra') - Number(b.collection === 'extra')
+    || yearOrder(a) - yearOrder(b) || collator.compare(a.strand || '', b.strand || '');
+  return 0;
 }
 
 function matching(pool, field) {
@@ -49,19 +76,20 @@ function matching(pool, field) {
 
 function render() {
   let pool = rows.slice();
-  filters.forEach((field, index) => {
+  filters.forEach(field => {
     const menu = $(field);
     const old = menu.value;
     const options = [...new Set(pool.flatMap(row => values(row, field)))].sort(collator.compare);
-    menu.replaceChildren(new Option(labels[index], ''), ...options.map(value =>
-      new Option(field === 'year' && /^\d+$/.test(value) ? 'Year ' + value : value, value)));
+    menu.replaceChildren(new Option(menu.dataset.all, ''), ...options.map(value =>
+      new Option(field === 'year' && /^\d+$/.test(value) ? 'Year ' + value : optionLabels[value] || value, value)));
     if (options.includes(old)) menu.value = old;
     pool = matching(pool, field);
   });
   const terms = $('query').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   if (terms.length) pool = pool.filter(row => terms.every(term => row.search.includes(term)));
-  pool.sort((a,b) => ($('sort').value === 'newest' ? (Date.parse(b.added) || 0) - (Date.parse(a.added) || 0) : 0)
-    || collator.compare(a.title, b.title));
+  const sort = $('sort').value;
+  pool.sort((a, b) => compareRows(a, b, sort) || collator.compare(a.title, b.title));
+  const pageSize = Number($('pageSize')?.value) || 24;
   const totalPages = Math.max(1, Math.ceil(pool.length / pageSize));
   page = Math.min(page, totalPages);
   const start = (page - 1) * pageSize;
@@ -242,7 +270,7 @@ async function loadCatalogue() {
 
 if (selected) {
 $('detail').addEventListener('close', () => $('preview').replaceChildren());
-for (const id of ['query', ...filters, 'sort']) $(id).addEventListener(id === 'query' ? 'input' : 'change', () => {
+for (const id of ['query', ...filters, 'sort', ...($('pageSize') ? ['pageSize'] : [])]) $(id).addEventListener(id === 'query' ? 'input' : 'change', () => {
   page = 1;
   render();
 });
