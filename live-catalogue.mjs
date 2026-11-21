@@ -104,7 +104,8 @@ export function normalizeCatalogue(kind, data) {
     const file = url(row.worksheet?.url || row.url);
     if (!file || (row.documentRole === 'Marking key' && linkedKeys.has(file))) return [];
     return [{
-      id: row.id, title: row.title, years: individualYears(row.years?.length ? row.years : [row.year].filter(Boolean)), subject: row.subject,
+      id: row.id, title: row.title, years: individualYears(row.years?.length ? row.years : [row.year].filter(Boolean)).length
+        ? individualYears(row.years?.length ? row.years : [row.year].filter(Boolean)) : kind === 'worksheets' ? ['unspecified'] : [], subject: row.subject,
       area: row.area || row.subjectGroup, strand: row.strand || undefined,
       topic: row.categoryTopic || row.supportingTopic || row.topic || undefined, pathway: row.pathway || undefined,
       unit: row.unit || undefined, publisher: row.publisher || row.school || row.author || undefined,
