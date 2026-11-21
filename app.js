@@ -246,7 +246,22 @@ async function loadCatalogue() {
   try {
     let resources;
     try {
-      resources = normalizeCatalogue(selected, await fetchCatalogue(getSourceUrl(selected)));
+      const catalogue = await fetchCatalogue(getSourceUrl(selected));
+      if (selected === 'worksheets') {
+        try {
+          const placements = await fetchCatalogue('https://science-vault.github.io/worksheet-vault/catalogue/year-placement-overrides.json');
+          for (const item of catalogue) {
+            const placement = placements[String(item.id || '').replace(/^github:/, '')];
+            if (!placement) continue;
+            item.keywords = [...new Set([...(item.keywords || []), item.topic, item.supportingTopic, item.strand,
+              ...(placement.keywords || [])].filter(Boolean))];
+            for (const field of ['year', 'years', 'collection', 'topic', 'supportingTopic', 'strand', 'classificationNote']) {
+              if (field in placement) item[field] = placement[field];
+            }
+          }
+        } catch (error) { console.warn('Reviewed worksheet placements unavailable:', error); }
+      }
+      resources = normalizeCatalogue(selected, catalogue);
     } catch (error) {
       console.warn('Live catalogue unavailable:', error);
       resources = await fetchCatalogue(selected + '.json');
