@@ -76,6 +76,15 @@ export function getSourceUrl(kind) {
   return 'https://science-vault.github.io/' + repo + '/' + path;
 }
 
+function individualYears(values) {
+  return [...new Set((values || []).flatMap(value => {
+    const match = String(value).match(/^(\d{1,2})[–-](\d{1,2})$/);
+    return match && +match[2] >= +match[1] && +match[2] - +match[1] <= 5
+      ? Array.from({ length: +match[2] - +match[1] + 1 }, (_, i) => String(+match[1] + i))
+      : [String(value)];
+  }))];
+}
+
 export function normalizeCatalogue(kind, data) {
   const [repo, , key] = sources[kind];
   const base = 'https://science-vault.github.io/' + repo + '/';
@@ -95,7 +104,7 @@ export function normalizeCatalogue(kind, data) {
     const file = url(row.worksheet?.url || row.url);
     if (!file || (row.documentRole === 'Marking key' && linkedKeys.has(file))) return [];
     return [{
-      id: row.id, title: row.title, years: (row.years || []).map(String), subject: row.subject,
+      id: row.id, title: row.title, years: individualYears(row.years?.length ? row.years : [row.year].filter(Boolean)), subject: row.subject,
       area: row.area || row.subjectGroup, strand: row.strand || undefined,
       topic: row.categoryTopic || row.supportingTopic || row.topic || undefined, pathway: row.pathway || undefined,
       unit: row.unit || undefined, publisher: row.publisher || row.school || row.author || undefined,
@@ -106,7 +115,8 @@ export function normalizeCatalogue(kind, data) {
       unlinkedAnswer: row.unlinkedAnswer || undefined,
       examYear: row.examYear || undefined, role: row.documentRole || undefined,
       format: row.format || row.resourceType, added: row.addedAt || row.added,
-      description: row.description || undefined, keywords: row.keywords?.slice(0, 25),
+      description: row.description || undefined, keywords: row.keywords,
+      searchText: kind === 'worksheets' ? row.searchText : undefined,
       file, preview: url(row.previewUrl), thumbnail: url(row.thumbnail || row.cover || row.coverSource),
       integratedAnswers: row.integratedAnswers || undefined, supportCount: row.supportCount || undefined,
       answer: url(row.markingKeyUrl || row.answer?.url), answerPreview: url(row.markingKeyPreviewUrl),
