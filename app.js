@@ -1,4 +1,4 @@
-import { getSourceUrl, normalizeCatalogue } from './live-catalogue.mjs?v=collection-filters-2';
+import { getSourceUrl, normalizeCatalogue } from './live-catalogue.mjs?v=worksheet-sync-3';
 'use strict';
 
 const collections = {
@@ -256,7 +256,7 @@ async function loadCatalogue() {
     for (const row of resources) {
       row.kind = selected;
       row.search = [row.title, ...metadata(row), row.area, row.publisher, row.description,
-        row.format, row.role, ...(row.keywords || [])].filter(Boolean).join(' ').toLowerCase();
+        row.format, row.role, ...(row.keywords || []), row.searchText].filter(Boolean).join(' ').toLowerCase();
       rows.push(row);
     }
   } catch (error) {
