@@ -133,3 +133,6 @@ dialog::backdrop { background: #071624bb; }
   .top-nav .top-link:last-child { display: inline; }
   .builder-links { grid-template-columns: 1fr; }
 }
+
+.collection-tab { text-decoration: none; }
+.collection-tab[aria-current="page"] { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }

@@ -1,7 +1,7 @@
+import { getSourceUrl, normalizeCatalogue } from './live-catalogue.mjs';
 'use strict';
 
 const collections = {
-  all: ['All resources', ''],
   assessments: ['Assessments', 'school-resource-library'],
   exams: ['Exams', 'exam-library'],
   textbooks: ['Textbooks', 'textbook-library'],
@@ -15,11 +15,10 @@ const number = new Intl.NumberFormat('en-AU');
 const collator = new Intl.Collator('en-AU', { numeric: true, sensitivity: 'base' });
 const pageSize = 24;
 const collectionIcons = { all: '▦', assessments: '▤', exams: '▣', textbooks: '▥', videos: '▷', worksheets: '▧' };
-const collectionCounts = new Map();
 const rows = [];
-const failures = [];
-let pending = Object.keys(collections).length - 1;
-let selected = 'all';
+const selected = document.body.dataset.collection;
+let pending = Boolean(selected);
+let loadNotice = '';
 let page = 1;
 
 function element(tag, value, className) {
@@ -49,7 +48,7 @@ function matching(pool, field) {
 }
 
 function render() {
-  let pool = rows.filter(row => selected === 'all' || selected === row.kind);
+  let pool = rows.slice();
   filters.forEach((field, index) => {
     const menu = $(field);
     const old = menu.value;
@@ -71,7 +70,7 @@ function render() {
     ? number.format(start + 1) + '–' + number.format(start + shown.length) + ' of ' + number.format(pool.length) + ' resources'
     : pending ? 'Loading catalogue…' : 'No resources match these filters.')
     + (pending && pool.length ? ' · Loading more…' : '')
-    + (failures.length ? ' · Unavailable: ' + failures.join(', ') : '');
+    + (loadNotice ? ' · ' + loadNotice : '');
   $('results').replaceChildren(...shown.map(card));
   $('pages').replaceChildren();
   if (totalPages > 1) {
@@ -197,49 +196,52 @@ function open(row) {
   $('detail').showModal();
 }
 
-$('detail').addEventListener('close', () => $('preview').replaceChildren());
 for (const [kind, [title, repo]] of Object.entries(collections)) {
-  const button = element('button', '', 'collection-tab');
-  button.dataset.kind = kind;
+  const tab = element('a', '', 'collection-tab');
+  tab.href = kind + '.html';
+  tab.dataset.kind = kind;
+  if (kind === selected) tab.setAttribute('aria-current', 'page');
   const icon = element('span', collectionIcons[kind], 'collection-icon');
   icon.setAttribute('aria-hidden', 'true');
-  const caption = element('span', '', 'collection-caption');
-  const count = element('span', 'Loading…', 'collection-count');
-  caption.append(element('strong', title), count);
-  button.append(icon, caption);
-  collectionCounts.set(kind, count);
-  button.type = 'button';
-  button.setAttribute('aria-pressed', String(kind === 'all'));
-  button.onclick = () => {
-    selected = kind;
-    for (const item of $('collections').children) item.setAttribute('aria-pressed', String(item === button));
-    for (const filter of filters) $(filter).value = '';
-    page = 1;
-    render();
-  };
-  $('collections').append(button);
-  if (!repo) continue;
-  $('sources').append(link(repo === 'exam-library' ? 'Exam Library' : repo === 'school-resource-library' ? 'School Assessment Library' : title, 'https://science-vault.github.io/' + repo + '/'));
-  fetch(kind + '.json', { cache: 'no-cache' }).then(response => {
-    if (!response.ok) throw Error('Catalogue unavailable');
-    return response.json();
-  }).then(resources => {
-    count.textContent = number.format(resources.length) + ' resources';
+  tab.append(icon, element('strong', title, 'collection-caption'));
+  $('collections').append(tab);
+  $('sources').append(link(title, 'https://science-vault.github.io/' + repo + '/'));
+}
+
+async function fetchCatalogue(url) {
+  const response = await fetch(url, { cache: 'no-cache', signal: AbortSignal.timeout(90000) });
+  if (!response.ok) throw Error('Catalogue returned HTTP ' + response.status);
+  return response.json();
+}
+
+async function loadCatalogue() {
+  try {
+    let resources;
+    try {
+      resources = normalizeCatalogue(selected, await fetchCatalogue(getSourceUrl(selected)));
+    } catch (error) {
+      console.warn('Live catalogue unavailable:', error);
+      resources = await fetchCatalogue(selected + '.json');
+      if (!Array.isArray(resources)) throw Error('Invalid backup catalogue');
+      loadNotice = 'Showing a saved copy because the live collection is unavailable';
+    }
     for (const row of resources) {
-      row.kind = kind;
+      row.kind = selected;
       row.search = [row.title, ...metadata(row), row.area, row.publisher, row.description,
         row.format, row.role, ...(row.keywords || [])].filter(Boolean).join(' ').toLowerCase();
       rows.push(row);
     }
-  }).catch(() => {
-    count.textContent = 'Unavailable';
-    failures.push(title);
-  }).finally(() => {
-    pending -= 1;
-    if (!pending) collectionCounts.get('all').textContent = number.format(rows.length) + ' resources';
+  } catch (error) {
+    loadNotice = 'Catalogue unavailable. Refresh to try again';
+    console.warn(error);
+  } finally {
+    pending = false;
     render();
-  });
+  }
 }
+
+if (selected) {
+$('detail').addEventListener('close', () => $('preview').replaceChildren());
 for (const id of ['query', ...filters, 'sort']) $(id).addEventListener(id === 'query' ? 'input' : 'change', () => {
   page = 1;
   render();
@@ -256,3 +258,5 @@ $('clear').onclick = () => {
   render();
 };
 render();
+loadCatalogue();
+}
