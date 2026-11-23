@@ -1,10 +1,11 @@
-import { getSourceUrl, normalizeCatalogue } from './live-catalogue.mjs?v=worksheet-sync-3';
+import { getSourceUrl, normalizeCatalogue } from './live-catalogue.mjs?v=powerpoints-1';
 'use strict';
 
 const collections = {
   assessments: ['Assessments', 'school-resource-library'],
   exams: ['Exams', 'exam-library'],
   textbooks: ['Textbooks', 'textbook-library'],
+  powerpoints: ['PowerPoints', 'powerpoint-library'],
   videos: ['Videos', 'video-library'],
   worksheets: ['Worksheets', 'worksheet-vault'],
 };
@@ -12,7 +13,7 @@ const filters = [...document.querySelectorAll('.filters select')].map(menu => me
 const $ = id => document.getElementById(id);
 const number = new Intl.NumberFormat('en-AU');
 const collator = new Intl.Collator('en-AU', { numeric: true, sensitivity: 'base' });
-const collectionIcons = { all: '▦', assessments: '▤', exams: '▣', textbooks: '▥', videos: '▷', worksheets: '▧' };
+const collectionIcons = { all: '▦', assessments: '▤', exams: '▣', textbooks: '▥', powerpoints: '▰', videos: '▷', worksheets: '▧' };
 const rows = [];
 const selected = document.body.dataset.collection;
 let pending = Boolean(selected);
@@ -264,6 +265,11 @@ async function loadCatalogue() {
       resources = normalizeCatalogue(selected, catalogue);
     } catch (error) {
       console.warn('Live catalogue unavailable:', error);
+      if (selected === 'powerpoints') {
+        loadNotice = 'PowerPoint Library unavailable. Try the Resource Hub backup below';
+        $('sources').prepend(link('PowerPoints backup', 'https://science-vault-resource-hub.jjdcruz27.chatgpt.site/powerpoints.html'));
+        return;
+      }
       resources = await fetchCatalogue(selected + '.json');
       if (!Array.isArray(resources)) throw Error('Invalid backup catalogue');
       loadNotice = 'Showing a saved copy because the live collection is unavailable';

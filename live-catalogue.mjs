@@ -5,6 +5,7 @@ export const sources = {
   assessments: ['school-resource-library', 'catalog.json', 'resources'],
   exams: ['exam-library', 'catalog.json', 'resources'],
   textbooks: ['textbook-library', 'catalog.json', 'books'],
+  powerpoints: ['powerpoint-library', 'catalog.json', 'resources'],
   videos: ['video-library', 'catalog.json', 'resources'],
   worksheets: ['worksheet-vault', 'catalogue/worksheets.json'],
 };
@@ -117,7 +118,7 @@ export function normalizeCatalogue(kind, data) {
       examYear: row.examYear || undefined, role: row.documentRole || undefined,
       format: row.format || row.resourceType, added: row.addedAt || row.added,
       description: row.description || undefined, keywords: row.keywords,
-      searchText: kind === 'worksheets' ? row.searchText : undefined,
+      searchText: ['powerpoints', 'worksheets'].includes(kind) ? row.searchText : undefined,
       file, preview: url(row.previewUrl), thumbnail: url(row.thumbnail || row.cover || row.coverSource),
       integratedAnswers: row.integratedAnswers || undefined, supportCount: row.supportCount || undefined,
       answer: url(row.markingKeyUrl || row.answer?.url), answerPreview: url(row.markingKeyPreviewUrl),
