@@ -104,7 +104,13 @@ function render() {
     : pending ? 'Loading catalogue…' : 'No resources match these filters.')
     + (pending && pool.length ? ' · Loading more…' : '')
     + (loadNotice ? ' · ' + loadNotice : '');
-  if (selected === 'assessments' && assessmentView === 'directory') {\n    assessmentDirectory(pool, $('results'), open);\n    $('status').textContent = number.format(pool.length) + ' assessments in directory' + (pending ? ' · Loading more…' : '');\n    $('pages').replaceChildren();\n    return;\n  }\n  if (selected === 'powerpoints' && powerpointView === 'directory') {
+  if (selected === 'assessments' && assessmentView === 'directory') {
+    assessmentDirectory(pool, $('results'), open);
+    $('status').textContent = number.format(pool.length) + ' assessments in directory' + (pending ? ' · Loading more…' : '');
+    $('pages').replaceChildren();
+    return;
+  }
+  if (selected === 'powerpoints' && powerpointView === 'directory') {
     directoryView(pool, $('results'), open);
     $('status').textContent = number.format(pool.length) + ' PowerPoints in directory' + (pending ? ' · Loading more…' : '');
     $('pages').replaceChildren();
@@ -300,7 +306,11 @@ async function loadCatalogue() {
 }
 
 if (selected) {
-if (selected === 'assessments') {\n  $('viewMode').addEventListener('change', event => { assessmentView = event.target.value; render(); });\n}\nif (selected === 'powerpoints') {\n  $('viewMode').addEventListener('change', event => {
+if (selected === 'assessments') {
+  $('viewMode').addEventListener('change', event => { assessmentView = event.target.value; render(); });
+}
+if (selected === 'powerpoints') {
+  $('viewMode').addEventListener('change', event => {
     powerpointView = event.target.value;
     render();
   });
