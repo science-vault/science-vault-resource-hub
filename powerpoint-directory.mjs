@@ -13,7 +13,7 @@ function partsFor(row) {
       parts = parts.slice(repo + 1);
       if (['blob','raw'].includes(parts[0])) parts = parts.slice(2);
     }
-    // Never show the repository's site scripts or metadata in the resource browser.
+    // Start the tree inside the repository's resources folder.\n    const resourcesIndex = parts.indexOf('resources');\n    if (resourcesIndex < 0) return null;\n    parts = parts.slice(resourcesIndex + 1);\n    // Never show the repository's site scripts or metadata in the resource browser.
     if (!parts.length || excluded.test(parts.at(-1)) || !allowed.test(parts.at(-1))) return null;
     return parts;
   } catch { return null; }
@@ -29,7 +29,7 @@ export function directoryView(rows, container, openResource) {
   const root = make('section','ppt-tree');
   root.setAttribute('aria-label','PowerPoint resource directory');
   const head = make('div','ppt-tree-heading');
-  head.append(make('strong','', 'PowerPoints'));
+  head.append(make('strong','', 'Resources'));
   const tree = make('div','ppt-tree-content');
   root.append(head,tree);
   container.replaceChildren(root);
