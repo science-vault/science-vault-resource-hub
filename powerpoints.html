@@ -6,7 +6,18 @@
 <meta name="theme-color" content="#081725">
 <title>PowerPoints · Science Vault Resource Hub</title>
 <link rel="stylesheet" href="style.css?v=collection-filters-2">
-<script type="module" src="app.js?v=powerpoints-1"></script>
+<script type="module" src="app.js?v=powerpoints-directory-1"></script>
+<style>
+.directory-view{border:1px solid #cbd5e1;border-radius:14px;overflow:hidden;background:#fff;color:#172638}
+.directory-crumbs{padding:14px 18px;background:#edf4f9;border-bottom:1px solid #cbd5e1;display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.directory-crumbs button{border:0;background:transparent;color:#135b91;cursor:pointer;font:inherit;padding:3px}
+.directory-summary{margin:0;padding:14px 18px;color:#475569;border-bottom:1px solid #e2e8f0}
+.directory-entry{width:100%;display:flex;align-items:center;text-align:left;gap:14px;padding:13px 18px;border:0;border-bottom:1px solid #e2e8f0;background:#fff;color:#172638;font:inherit;cursor:pointer}
+.directory-entry:hover,.directory-entry:focus-visible{background:#edf6ff}
+.directory-entry small{margin-left:auto;color:#64748b;white-space:nowrap}
+.directory-symbol{font-size:1.4em}
+@media(max-width:600px){.directory-entry{gap:8px;padding:12px}.directory-entry small{font-size:.75em}}
+</style>
 </head>
 <body data-collection="powerpoints">
 <a class="skip" href="#query">Skip to search</a>
@@ -30,7 +41,7 @@
 </section>
 <nav id="collections" aria-label="Resource collections"></nav>
 <section class="catalogue" id="catalogue" aria-labelledby="catalogue-title">
-<div class="catalogue-head"><h2 id="catalogue-title">PowerPoints catalogue</h2><div class="catalogue-options"><label class="sort">Sort by <select id="sort"><option value="title">Title A–Z</option><option value="newest">Recently added</option><option value="year">Year level</option></select></label><label class="sort">Resources per page <select id="pageSize"><option>20</option><option selected>40</option><option>60</option><option>100</option></select></label></div></div>
+<div class="catalogue-head"><h2 id="catalogue-title">PowerPoints catalogue</h2><div class="catalogue-options"><label class="sort">View <select id="viewMode" aria-label="PowerPoints display mode"><option value="grid">Grid view</option><option value="directory">Directory view</option></select></label><label class="sort">Sort by <select id="sort"><option value="title">Title A–Z</option><option value="newest">Recently added</option><option value="year">Year level</option></select></label><label class="sort">Resources per page <select id="pageSize"><option>20</option><option selected>40</option><option>60</option><option>100</option></select></label></div></div>
 <div class="filters">
 <label>Learning area<select id="area" data-all="All learning areas"><option value="">All learning areas</option></select></label>
 <label>Subject<select id="subject" data-all="All subjects"><option value="">All subjects</option></select></label>
