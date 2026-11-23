@@ -1,3 +1,4 @@
+import { directoryView } from './powerpoint-directory.mjs';
 import { getSourceUrl, normalizeCatalogue } from './live-catalogue.mjs?v=powerpoints-1';
 'use strict';
 
@@ -19,6 +20,7 @@ const selected = document.body.dataset.collection;
 let pending = Boolean(selected);
 let loadNotice = '';
 let page = 1;
+let powerpointView = 'grid';
 
 function element(tag, value, className) {
   const node = document.createElement(tag);
@@ -100,6 +102,12 @@ function render() {
     : pending ? 'Loading catalogue…' : 'No resources match these filters.')
     + (pending && pool.length ? ' · Loading more…' : '')
     + (loadNotice ? ' · ' + loadNotice : '');
+  if (selected === 'powerpoints' && powerpointView === 'directory') {
+    directoryView(pool, $('results'), open);
+    $('status').textContent = number.format(pool.length) + ' PowerPoints in directory' + (pending ? ' · Loading more…' : '');
+    $('pages').replaceChildren();
+    return;
+  }
   $('results').replaceChildren(...shown.map(card));
   $('pages').replaceChildren();
   if (totalPages > 1) {
@@ -290,6 +298,12 @@ async function loadCatalogue() {
 }
 
 if (selected) {
+if (selected === 'powerpoints') {
+  $('viewMode').addEventListener('change', event => {
+    powerpointView = event.target.value;
+    render();
+  });
+}
 $('detail').addEventListener('close', () => $('preview').replaceChildren());
 for (const id of ['query', ...filters, 'sort', ...($('pageSize') ? ['pageSize'] : [])]) $(id).addEventListener(id === 'query' ? 'input' : 'change', () => {
   page = 1;
