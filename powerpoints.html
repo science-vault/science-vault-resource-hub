@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#081725">
 <title>PowerPoints · Science Vault Resource Hub</title>
 <link rel="stylesheet" href="style.css?v=collection-filters-2">
-<script type="module" src="app.js?v=powerpoints-tree-3"></script>
+<script type="module" src="app.js?v=powerpoints-tree-4"></script>
 <style>
 .directory-view{border:1px solid #cbd5e1;border-radius:14px;overflow:hidden;background:#fff;color:#172638}
 .directory-crumbs{padding:14px 18px;background:#edf4f9;border-bottom:1px solid #cbd5e1;display:flex;flex-wrap:wrap;align-items:center;gap:7px}
@@ -20,25 +20,25 @@
 </style>
 <style>
 /* Compact expandable file tree, modelled on the provided directory reference. */
-.ppt-tree{background:#2c2f34;color:#f4f6fb;border-radius:12px;overflow:hidden;padding:16px 10px 22px}
+.ppt-tree{background:#fff;color:#122637;border-radius:12px;overflow:hidden;padding:16px 10px 22px}
 .ppt-tree-heading{display:flex;align-items:baseline;gap:15px;padding:0 12px 12px}
-.ppt-tree-heading strong{font-size:1.55rem}
-.ppt-tree-count{font-size:.85rem;color:#b9c6db}
+.ppt-tree-heading strong{font-size:1.55rem;color:#122637}
+.ppt-tree-count{font-size:.85rem;color:#4e6274}
 .ppt-tree-content{overflow-x:auto}
 .ppt-tree-line{--tree-depth:0;display:flex;align-items:center;gap:10px;min-height:30px;padding:2px 12px 2px calc(12px + var(--tree-depth)*23px);font-size:.94rem;white-space:nowrap}
-.ppt-tree-line:hover{background:#373d48}
-.ppt-tree-toggle{min-height:26px;display:inline-flex;align-items:center;gap:8px;padding:1px 4px;background:transparent;border:0;color:#84a1ff;font-weight:400;text-align:left;border-radius:3px}
-.ppt-tree-toggle:hover{background:#404b68;color:#b3c7ff}
-.ppt-tree-chevron{width:12px;color:#c0c8db}
+.ppt-tree-line:hover{background:#edf3f7}
+.ppt-tree-toggle{min-height:26px;display:inline-flex;align-items:center;gap:8px;padding:1px 4px;background:transparent;border:0;color:#006b64;font-weight:400;text-align:left;border-radius:3px}
+.ppt-tree-toggle:hover{background:#eaf8f5;color:#005a54}
+.ppt-tree-chevron{width:12px;color:#4e6274}
 .ppt-tree-folder{font-size:1rem}
 .ppt-tree-name{font-size:.94rem}
 .ppt-tree-file-icon{margin-left:19px;font-size:.95rem}
-.ppt-tree-filename{color:#a3b6ff;overflow-wrap:anywhere;white-space:normal}
-.ppt-tree-action{min-height:25px;padding:2px 10px;background:#6e87df;border:0;border-radius:3px;color:white;font-size:.78rem;font-weight:600}
-.ppt-tree-action:hover{background:#849df3;color:#fff}
-.ppt-tree-download{font-size:1.35rem;line-height:1;color:#90a9ff;text-decoration:none;padding:0 5px}
-.ppt-tree-download:hover{color:white}
-.ppt-tree-empty{padding:10px 16px;color:#c6d2e4}
+.ppt-tree-filename{color:#006b64;overflow-wrap:anywhere;white-space:normal}
+.ppt-tree-action{min-height:25px;padding:2px 10px;background:#006b64;border:0;border-radius:3px;color:white;font-size:.78rem;font-weight:600}
+.ppt-tree-action:hover{background:#00534e;color:#fff}
+.ppt-tree-download{font-size:1.35rem;line-height:1;color:#006b64;text-decoration:none;padding:0 5px}
+.ppt-tree-download:hover{color:#004e48}
+.ppt-tree-empty{padding:10px 16px;color:#4e6274}
 .ppt-tree-children[hidden]{display:none}
 @media(max-width:600px){.ppt-tree{padding:12px 4px}.ppt-tree-line{gap:6px}.ppt-tree-action{font-size:.72rem}}
 </style>
