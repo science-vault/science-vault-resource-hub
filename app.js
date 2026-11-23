@@ -1,4 +1,4 @@
-import { directoryView } from './powerpoint-directory.mjs';
+import { directoryView } from './powerpoint-directory.mjs?v=repository-tree-2';
 import { getSourceUrl, normalizeCatalogue } from './live-catalogue.mjs?v=powerpoints-1';
 'use strict';
 
