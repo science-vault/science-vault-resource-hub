@@ -42,6 +42,14 @@
 .ppt-tree-children[hidden]{display:none}
 @media(max-width:600px){.ppt-tree{padding:12px 4px}.ppt-tree-line{gap:6px}.ppt-tree-action{font-size:.72rem}}
 </style>
+<style>
+/* Full-width PowerPoints directory mode: preserve normal page width for Grid View. */
+body:has(#viewMode option[value="directory"]:checked) main.wrap{width:calc(100% - 32px);max-width:none}
+body:has(#viewMode option[value="directory"]:checked) #catalogue{width:100%;max-width:none}
+body:has(#viewMode option[value="directory"]:checked) #results{width:100%;max-width:none;display:block}
+body:has(#viewMode option[value="directory"]:checked) .ppt-tree{width:100%;max-width:none}
+@media(max-width:720px){body:has(#viewMode option[value="directory"]:checked) main.wrap{width:calc(100% - 16px)}}
+</style>
 </head>
 <body data-collection="powerpoints">
 <a class="skip" href="#query">Skip to search</a>
