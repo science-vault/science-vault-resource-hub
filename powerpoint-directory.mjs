@@ -1,91 +1,96 @@
-// Repository-path tree for PowerPoints. Folder names come from each source file URL,
-// not from inferred curriculum metadata. The active catalogue filters still apply.
-let trail = [];
-const collator = new Intl.Collator('en-AU', {numeric:true, sensitivity:'base'});
-const sourceRepo = 'powerpoint-library';
-function pathParts(row) {
+// Nested, resource-only repository tree for the PowerPoints catalogue.
+// Files are sourced exclusively from catalogue records, never a repository source-code listing.
+const collator = new Intl.Collator('en-AU', { numeric: true, sensitivity: 'base' });
+const openFolders = new Set();
+const allowed = /\.(?:ppt|pptx|pps|ppsx|pot|potx|pdf|doc|docx|xls|xlsx|odp|odt|ods|zip)$/i;
+const excluded = /^(?:index\.html?|readme(?:\.md)?|package(?:-lock)?\.json|.*\.(?:js|mjs|cjs|css|html?|json|ya?ml|toml|ts|tsx|jsx|map|svg))$/i;
+function partsFor(row) {
   try {
     const url = new URL(row.file);
-    const pieces = decodeURIComponent(url.pathname).split('/').filter(Boolean);
-    // GitHub Pages: /powerpoint-library/<repository folders>/<filename>
-    const index = pieces.indexOf(sourceRepo);
-    if (index >= 0) return pieces.slice(index + 1);
-    // GitHub raw/content URLs: /owner/repo/(raw|blob)/branch/...
-    const repoIndex = pieces.indexOf(sourceRepo);
-    if (repoIndex >= 0) {
-      const rest = pieces.slice(repoIndex + 1);
-      return ['raw','blob'].includes(rest[0]) ? rest.slice(2) : rest;
+    let parts = decodeURIComponent(url.pathname).split('/').filter(Boolean);
+    const repo = parts.indexOf('powerpoint-library');
+    if (repo >= 0) {
+      parts = parts.slice(repo + 1);
+      if (['blob','raw'].includes(parts[0])) parts = parts.slice(2);
     }
-    return pieces.length ? pieces : [row.title || 'Untitled'];
-  } catch { return [row.title || 'Untitled']; }
+    // Never show the repository's site scripts or metadata in the resource browser.
+    if (!parts.length || excluded.test(parts.at(-1)) || !allowed.test(parts.at(-1))) return null;
+    return parts;
+  } catch { return null; }
 }
+function make(tag, className, label) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (label !== undefined) node.textContent = label;
+  return node;
+}
+function folderKey(parts) { return parts.join('/'); }
 export function directoryView(rows, container, openResource) {
-  const root = document.createElement('div');
-  root.className = 'directory-view';
-  const crumbs = document.createElement('nav');
-  crumbs.className = 'directory-crumbs';
-  crumbs.setAttribute('aria-label', 'Repository folder location');
-  const listing = document.createElement('div');
-  listing.className = 'directory-list';
-  root.append(crumbs, listing);
+  const root = make('section','ppt-tree');
+  root.setAttribute('aria-label','PowerPoint resource directory');
+  const head = make('div','ppt-tree-heading');
+  head.append(make('strong','', 'PowerPoints'));
+  const tree = make('div','ppt-tree-content');
+  root.append(head,tree);
   container.replaceChildren(root);
-  const entries = rows.map(row => ({row, parts:pathParts(row)}));
-  function draw() {
-    let subset = entries.filter(entry => trail.every((part,i) => entry.parts[i] === part));
-    if (!subset.length && trail.length) {
-      trail = [];
-      subset = entries;
+  const top = {folders:new Map(),files:[]};
+  let count = 0;
+  for (const row of rows) {
+    const parts = partsFor(row);
+    if (!parts) continue;
+    count++;
+    let node = top;
+    for (const folder of parts.slice(0,-1)) {
+      if (!node.folders.has(folder)) node.folders.set(folder,{folders:new Map(),files:[]});
+      node = node.folders.get(folder);
     }
-    crumbs.replaceChildren();
-    function crumb(name, depth) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.textContent = name;
-      button.disabled = depth === trail.length;
-      button.onclick = () => { trail = trail.slice(0,depth); draw(); };
-      crumbs.append(button);
+    node.files.push({name:parts.at(-1),row});
+  }
+  head.append(make('span','ppt-tree-count',count.toLocaleString('en-AU')+' resources'));
+  const empty = make('p','ppt-tree-empty','No presentation resources match the current filters.');
+  if (!count) { tree.append(empty); return; }
+  function drawNode(node, parent, path=[], depth=0) {
+    const folders = [...node.folders.entries()].sort((a,b)=>collator.compare(a[0],b[0]));
+    for (const [name,child] of folders) {
+      const next = [...path,name], key=folderKey(next);
+      const group = make('div','ppt-tree-group');
+      const line = make('div','ppt-tree-line');
+      line.style.setProperty('--tree-depth',depth);
+      const toggle = make('button','ppt-tree-toggle');
+      toggle.type='button';
+      const expanded = openFolders.has(key);
+      toggle.setAttribute('aria-expanded',String(expanded));
+      toggle.setAttribute('aria-label',(expanded?'Collapse ':'Expand ')+name);
+      toggle.append(make('span','ppt-tree-chevron',expanded?'▾':'▸'),make('span','ppt-tree-folder','📁'),make('span','ppt-tree-name',name));
+      const children = make('div','ppt-tree-children');
+      children.hidden = !expanded;
+      toggle.onclick=()=>{
+        if(openFolders.has(key))openFolders.delete(key);else openFolders.add(key);
+        directoryView(rows,container,openResource);
+      };
+      line.append(toggle);
+      group.append(line,children);
+      parent.append(group);
+      if(expanded) drawNode(child,children,next,depth+1);
     }
-    crumb(sourceRepo, 0);
-    trail.forEach((part,i) => { crumbs.append(' / '); crumb(part,i+1); });
-    listing.replaceChildren();
-    const summary = document.createElement('p');
-    summary.className = 'directory-summary';
-    summary.textContent = subset.length.toLocaleString('en-AU') + ' presentations · Repository folder structure';
-    listing.append(summary);
-    const folders = new Map(), files = [];
-    for (const entry of subset) {
-      const part = entry.parts[trail.length];
-      if (entry.parts.length > trail.length + 1) {
-        if (!folders.has(part)) folders.set(part, new Set());
-        folders.get(part).add(entry.row.file || entry.row.id);
-      } else files.push(entry);
-    }
-    for (const [name, items] of [...folders].sort((a,b) => collator.compare(a[0],b[0]))) {
-      const button = document.createElement('button');
-      button.type = 'button'; button.className = 'directory-entry';
-      const icon = document.createElement('span'); icon.className = 'directory-symbol'; icon.textContent = '📁';
-      const title = document.createElement('span'); title.textContent = name;
-      const count = document.createElement('small'); count.textContent = items.size.toLocaleString('en-AU') + ' files';
-      button.append(icon,title,count);
-      button.onclick = () => { trail.push(name); draw(); };
-      listing.append(button);
-    }
-    files.sort((a,b) => collator.compare(a.parts.at(-1),b.parts.at(-1)));
-    for (const entry of files) {
-      const button = document.createElement('button');
-      button.type = 'button'; button.className = 'directory-entry';
-      const icon = document.createElement('span'); icon.className = 'directory-symbol'; icon.textContent = '📊';
-      const title = document.createElement('span'); title.textContent = entry.parts.at(-1);
-      const meta = document.createElement('small'); meta.textContent = entry.row.format || 'PowerPoint';
-      button.append(icon,title,meta);
-      button.onclick = () => openResource(entry.row);
-      listing.append(button);
-    }
-    if (listing.children.length === 1) {
-      const empty = document.createElement('p'); empty.className = 'directory-summary';
-      empty.textContent = 'No files in this folder match the selected filters.';
-      listing.append(empty);
+    for (const file of node.files.sort((a,b)=>collator.compare(a.name,b.name))) {
+      const line = make('div','ppt-tree-line ppt-tree-file');
+      line.style.setProperty('--tree-depth',depth);
+      const icon=make('span','ppt-tree-file-icon','📄');
+      const name=make('span','ppt-tree-filename',file.name);
+      const preview=make('button','ppt-tree-action','Preview');
+      preview.type='button';
+      preview.setAttribute('aria-label','Preview '+file.name);
+      preview.onclick=()=>openResource(file.row);
+      const download=make('a','ppt-tree-download','↓');
+      download.href=file.row.file;
+      download.target='_blank';
+      download.rel='noopener noreferrer';
+      download.setAttribute('aria-label','Open or download '+file.name);
+      download.title='Open or download original resource';
+      line.append(icon,name,preview,download);
+      parent.append(line);
     }
   }
-  draw();
+  drawNode(top,tree);
 }
