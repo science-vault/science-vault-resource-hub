@@ -253,6 +253,14 @@ for (const [kind, [title, repo]] of Object.entries(collections)) {
   $('sources').append(link(title, 'https://science-vault.github.io/' + repo + '/'));
 }
 
+const questionTab = element('a', '', 'collection-tab');
+questionTab.href = 'questions.html';
+questionTab.dataset.kind = 'questions';
+const questionIcon = element('span', '▥', 'collection-icon');
+questionIcon.setAttribute('aria-hidden', 'true');
+questionTab.append(questionIcon, element('strong', 'Question Database', 'collection-caption'));
+$('collections').append(questionTab);
+
 async function fetchCatalogue(url) {
   const response = await fetch(url, { cache: 'no-cache', signal: AbortSignal.timeout(90000) });
   if (!response.ok) throw Error('Catalogue returned HTTP ' + response.status);
