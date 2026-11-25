@@ -261,6 +261,42 @@ questionIcon.setAttribute('aria-hidden', 'true');
 questionTab.append(questionIcon, element('strong', 'Question Database', 'collection-caption'));
 $('collections').append(questionTab);
 
+async function updateCollectionCounts() {
+  const tabs = [...document.querySelectorAll('#collections .collection-tab')];
+  await Promise.allSettled(tabs.map(async tab => {
+    const kind = tab.dataset.kind;
+    const caption = tab.querySelector('.collection-caption');
+    const count = element('small', 'Loading count…');
+    count.style.cssText = 'display:block;font-weight:400;font-size:12px;margin-top:4px;color:inherit';
+    caption.append(count);
+    try {
+      let total;
+      if (kind === 'questions') {
+        const base = 'https://science-vault.github.io/science-vault-wa/';
+        if (!window.PracticeStudioCatalog) await new Promise((resolve,reject)=>{
+          const script=document.createElement('script');script.src=base+'practice-studio-catalog.js';script.onload=resolve;script.onerror=reject;document.head.append(script);
+        });
+        const results=await Promise.allSettled(window.PracticeStudioCatalog.indices.map(file=>fetchCatalogue(base+file)));
+        const ids=new Set();let missing=0;
+        for(const result of results){
+          if(result.status!=='fulfilled'){missing++;continue;}
+          const data=result.value;
+          const items=Array.isArray(data)?data:data.questions||data.items||data.entries;
+          if(!Array.isArray(items)){missing++;continue;}
+          for(const q of items) ids.add(q.id||q.hash||JSON.stringify(q));
+        }
+        if(missing===results.length) throw Error('Question indices unavailable');
+        total=ids.size;
+        count.textContent=number.format(total)+(missing?' loaded questions (partial)':' questions');
+      } else {
+        total=normalizeCatalogue(kind,await fetchCatalogue(getSourceUrl(kind))).length;
+        count.textContent=number.format(total)+' resources';
+      }
+    } catch(error){count.textContent='Count unavailable';console.warn(kind,error);}
+  }));
+}
+if (!selected) updateCollectionCounts();
+
 async function fetchCatalogue(url) {
   const response = await fetch(url, { cache: 'no-cache', signal: AbortSignal.timeout(90000) });
   if (!response.ok) throw Error('Catalogue returned HTTP ' + response.status);
