@@ -276,7 +276,9 @@ puzzleTab.href = 'https://puzzles-vault.jjdcruz27.chatgpt.site';
 const puzzleIcon = element('span', '✦', 'collection-icon');
 puzzleIcon.setAttribute('aria-hidden', 'true');
 const puzzleCaption = element('strong', 'Puzzles Vault', 'collection-caption');
-puzzleCaption.append(element('small', ' · Private', 'puzzle-access'));
+const puzzleCount = element('small', '120 puzzles · Private');
+puzzleCount.style.cssText = 'display:block;font-weight:400;font-size:12px;margin-top:4px;color:inherit';
+puzzleCaption.append(puzzleCount);
 puzzleTab.append(puzzleIcon, puzzleCaption);
 $('collections').append(puzzleTab);
 
