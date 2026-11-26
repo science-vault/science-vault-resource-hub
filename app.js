@@ -1,6 +1,7 @@
 import { assessmentDirectory } from './assessment-directory.mjs?v=1';
 import { directoryView } from './powerpoint-directory.mjs?v=resource-tree-4';
-import { applyWorksheetPlacements, getSourceUrl, normalizeCatalogue, worksheetPlacementsUrl } from './live-catalogue.mjs?v=catalogue-refresh-1';
+import { applyWorksheetPlacements, getSourceUrl, normalizeCatalogue, worksheetPlacementsUrl } from './live-catalogue.mjs?v=worksheet-search-1';
+import { organiseWorksheets, worksheetQuery, worksheetScore } from './worksheet-catalogue.mjs?v=1';
 'use strict';
 
 const collections = {
@@ -40,7 +41,7 @@ function link(label, url) {
 }
 
 const optionLabels = {
-  curriculum: 'SCSA curriculum topics', extra: 'Extra Worksheets', unspecified: 'Year not specified',
+  curriculum: 'SCSA curriculum topics', extra: 'Extra Worksheets', unspecified: selected === 'worksheets' ? 'Year to review' : 'Year not specified',
   answers: 'With answers / marking key', support: 'With supporting resources', unlinked: 'Unlinked answer files',
 };
 
@@ -90,10 +91,19 @@ function render() {
     if (options.includes(old)) menu.value = old;
     pool = matching(pool, field);
   });
-  const terms = $('query').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  if (terms.length) pool = pool.filter(row => terms.every(term => row.search.includes(term)));
   const sort = $('sort').value;
-  pool.sort((a, b) => compareRows(a, b, sort) || collator.compare(a.title, b.title));
+  if (selected === 'worksheets') {
+    const query = worksheetQuery($('query').value);
+    pool = pool.map(row => ({ row, score: query.active ? worksheetScore(row, query) : 0 }))
+      .filter(result => result.score >= 0)
+      .sort((a, b) => (sort === 'curriculum' ? b.score - a.score : 0)
+        || compareRows(a.row, b.row, sort) || collator.compare(a.row.title, b.row.title))
+      .map(result => result.row);
+  } else {
+    const terms = $('query').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (terms.length) pool = pool.filter(row => terms.every(term => row.search.includes(term)));
+    pool.sort((a, b) => compareRows(a, b, sort) || collator.compare(a.title, b.title));
+  }
   const pageSize = Number($('pageSize')?.value) || 24;
   const totalPages = Math.max(1, Math.ceil(pool.length / pageSize));
   page = Math.min(page, totalPages);
@@ -332,11 +342,14 @@ async function loadCatalogue() {
         resources = await fetchCatalogue(selected + '.json');
       }
       if (!Array.isArray(resources)) throw Error('Invalid backup catalogue');
+      if (selected === 'worksheets') resources = organiseWorksheets(resources).map(row => ({
+        ...row, years: row.years.length ? row.years : ['unspecified'],
+      }));
       loadNotice = 'Showing a saved copy because the live collection is unavailable';
     }
     for (const row of resources) {
       row.kind = selected;
-      row.search = [row.title, ...metadata(row), row.area, row.publisher, row.description,
+      if (selected !== 'worksheets') row.search = [row.title, ...metadata(row), row.area, row.publisher, row.description,
         row.format, row.role, ...(row.keywords || []), row.searchText].filter(Boolean).join(' ').toLowerCase();
       rows.push(row);
     }

@@ -1,5 +1,6 @@
 import './video-curriculum.js';
 import './assessment-model.js';
+import { organiseWorksheets } from './worksheet-catalogue.mjs?v=1';
 
 export const sources = {
   assessments: ['school-resource-library', 'catalog.json', 'resources'],
@@ -114,7 +115,7 @@ export function normalizeCatalogue(kind, data) {
   const rows = key ? data[key] : data;
   if (!Array.isArray(rows) || !rows.length) throw Error('Invalid catalogue for ' + repo);
   const linkedKeys = new Set(rows.map(row => url(row.markingKeyUrl)).filter(Boolean));
-  const packs = kind === 'assessments' ? assessmentPacks(rows) : kind === 'exams' ? examPacks(rows) : rows;
+  const packs = kind === 'assessments' ? assessmentPacks(rows) : kind === 'exams' ? examPacks(rows) : kind === 'worksheets' ? organiseWorksheets(rows) : rows;
   const result = packs.flatMap(original => {
     const row = kind === 'videos' ? globalThis.LibraryCurriculum.enrich(original) : original;
     const file = url(row.worksheet?.url || row.url);
@@ -133,6 +134,8 @@ export function normalizeCatalogue(kind, data) {
       examYear: row.examYear || undefined, role: row.documentRole || undefined,
       format: row.format || row.resourceType, added: row.addedAt || row.added,
       description: row.description || undefined, keywords: row.keywords,
+      originalFilename: kind === 'worksheets' ? row.originalFilename : undefined,
+      downloadName: kind === 'worksheets' ? row.worksheet?.name : undefined,
       searchText: ['powerpoints', 'worksheets'].includes(kind) ? row.searchText : undefined,
       file, preview: url(row.previewUrl), thumbnail: url(row.thumbnail || row.cover || row.coverSource),
       integratedAnswers: row.integratedAnswers || undefined, supportCount: row.supportCount || undefined,
