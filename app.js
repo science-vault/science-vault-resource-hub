@@ -276,11 +276,38 @@ puzzleTab.href = 'https://puzzles-vault.jjdcruz27.chatgpt.site';
 const puzzleIcon = element('span', '✦', 'collection-icon');
 puzzleIcon.setAttribute('aria-hidden', 'true');
 const puzzleCaption = element('strong', 'Puzzles Vault', 'collection-caption');
-const puzzleCount = element('small', '120 puzzles · Private');
+const puzzleCount = element('small', 'Loading count…');
 puzzleCount.style.cssText = 'display:block;font-weight:400;font-size:12px;margin-top:4px;color:inherit';
 puzzleCaption.append(puzzleCount);
 puzzleTab.append(puzzleIcon, puzzleCaption);
 $('collections').append(puzzleTab);
+
+function loadPuzzleCount() {
+  const origin = new URL(puzzleTab.href).origin;
+  const frame = document.createElement('iframe');
+  frame.hidden = true;
+  frame.title = 'Puzzles Vault catalogue count';
+  frame.src = origin + '/count.html?hub=' + encodeURIComponent(location.origin);
+  const timeout = setTimeout(() => finish(null), 12000);
+
+  function finish(count) {
+    clearTimeout(timeout);
+    window.removeEventListener('message', receive);
+    frame.remove();
+    puzzleCount.textContent = Number.isSafeInteger(count) && count >= 0
+      ? number.format(count) + ' puzzles'
+      : 'Count unavailable';
+  }
+
+  function receive(event) {
+    if (event.origin !== origin || event.source !== frame.contentWindow || event.data?.type !== 'puzzles-vault-count') return;
+    finish(event.data.count);
+  }
+
+  window.addEventListener('message', receive);
+  document.body.append(frame);
+}
+loadPuzzleCount();
 
 
 async function updateCollectionCounts() {
