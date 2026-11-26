@@ -1,6 +1,6 @@
 import { assessmentDirectory } from './assessment-directory.mjs?v=1';
 import { directoryView } from './powerpoint-directory.mjs?v=resource-tree-4';
-import { getSourceUrl, normalizeCatalogue } from './live-catalogue.mjs?v=powerpoints-1';
+import { applyWorksheetPlacements, getSourceUrl, normalizeCatalogue, worksheetPlacementsUrl } from './live-catalogue.mjs?v=catalogue-refresh-1';
 'use strict';
 
 const collections = {
@@ -289,12 +289,20 @@ async function updateCollectionCounts() {
         total=ids.size;
         count.textContent=number.format(total)+(missing?' loaded questions (partial)':' questions');
       } else {
-        total=normalizeCatalogue(kind,await fetchCatalogue(getSourceUrl(kind))).length;
-        count.textContent=number.format(total)+' resources';
+        try {
+          total = normalizeCatalogue(kind, await fetchCatalogue(getSourceUrl(kind))).length;
+          count.textContent = number.format(total) + ' resources';
+        } catch (error) {
+          console.warn('Live count unavailable:', kind, error);
+          const counts = await (snapshotCounts ??= fetchCatalogue('catalogue-counts.json'));
+          if (!Number.isInteger(counts[kind])) throw error;
+          count.textContent = number.format(counts[kind]) + ' resources (saved count)';
+        }
       }
     } catch(error){count.textContent='Count unavailable';console.warn(kind,error);}
   }));
 }
+let snapshotCounts;
 if (!selected) updateCollectionCounts();
 
 async function fetchCatalogue(url) {
@@ -310,27 +318,19 @@ async function loadCatalogue() {
       const catalogue = await fetchCatalogue(getSourceUrl(selected));
       if (selected === 'worksheets') {
         try {
-          const placements = await fetchCatalogue('https://science-vault.github.io/worksheet-vault/catalogue/year-placement-overrides.json');
-          for (const item of catalogue) {
-            const placement = placements[String(item.id || '').replace(/^github:/, '')];
-            if (!placement) continue;
-            item.keywords = [...new Set([...(item.keywords || []), item.topic, item.supportingTopic, item.strand,
-              ...(placement.keywords || [])].filter(Boolean))];
-            for (const field of ['year', 'years', 'collection', 'topic', 'supportingTopic', 'strand', 'classificationNote']) {
-              if (field in placement) item[field] = placement[field];
-            }
-          }
+          applyWorksheetPlacements(catalogue, await fetchCatalogue(worksheetPlacementsUrl));
         } catch (error) { console.warn('Reviewed worksheet placements unavailable:', error); }
       }
       resources = normalizeCatalogue(selected, catalogue);
     } catch (error) {
       console.warn('Live catalogue unavailable:', error);
-      if (selected === 'powerpoints') {
-        loadNotice = 'PowerPoint Library unavailable. Try the Resource Hub backup below';
-        $('sources').prepend(link('PowerPoints backup', 'https://science-vault-resource-hub.jjdcruz27.chatgpt.site/powerpoints.html'));
-        return;
+      if (selected === 'worksheets' && location.hostname.endsWith('.chatgpt.site')) {
+        const response = await fetch('worksheets.snapshot', { signal: AbortSignal.timeout(90000) });
+        if (!response.ok) throw Error('Worksheet snapshot returned HTTP ' + response.status);
+        resources = await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).json();
+      } else {
+        resources = await fetchCatalogue(selected + '.json');
       }
-      resources = await fetchCatalogue(selected + '.json');
       if (!Array.isArray(resources)) throw Error('Invalid backup catalogue');
       loadNotice = 'Showing a saved copy because the live collection is unavailable';
     }
@@ -342,6 +342,9 @@ async function loadCatalogue() {
     }
   } catch (error) {
     loadNotice = 'Catalogue unavailable. Refresh to try again';
+    if (selected === 'powerpoints' && !location.hostname.endsWith('.chatgpt.site')) {
+      $('sources').prepend(link('PowerPoints backup', 'https://science-vault-resource-hub.jjdcruz27.chatgpt.site/powerpoints.html'));
+    }
     console.warn(error);
   } finally {
     pending = false;

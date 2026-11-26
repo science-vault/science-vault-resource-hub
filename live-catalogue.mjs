@@ -77,6 +77,21 @@ export function getSourceUrl(kind) {
   return 'https://science-vault.github.io/' + repo + '/' + path;
 }
 
+export const worksheetPlacementsUrl = 'https://science-vault.github.io/worksheet-vault/catalogue/year-placement-overrides.json';
+
+export function applyWorksheetPlacements(rows, placements) {
+  for (const row of rows) {
+    const placement = placements[String(row.id || '').replace(/^github:/, '')];
+    if (!placement) continue;
+    row.keywords = [...new Set([...(row.keywords || []), row.topic, row.supportingTopic, row.strand,
+      ...(placement.keywords || [])].filter(Boolean))];
+    for (const field of ['year', 'years', 'collection', 'topic', 'supportingTopic', 'strand', 'classificationNote']) {
+      if (field in placement) row[field] = placement[field];
+    }
+  }
+  return rows;
+}
+
 function individualYears(values) {
   return [...new Set((values || []).flatMap(value => {
     const match = String(value).match(/^(\d{1,2})[–-](\d{1,2})$/);
