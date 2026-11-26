@@ -271,8 +271,18 @@ questionIcon.setAttribute('aria-hidden', 'true');
 questionTab.append(questionIcon, element('strong', 'Question Database', 'collection-caption'));
 $('collections').append(questionTab);
 
+const puzzleTab = element('a', '', 'collection-tab');
+puzzleTab.href = 'https://puzzles-vault.jjdcruz27.chatgpt.site';
+const puzzleIcon = element('span', '✦', 'collection-icon');
+puzzleIcon.setAttribute('aria-hidden', 'true');
+const puzzleCaption = element('strong', 'Puzzles Vault', 'collection-caption');
+puzzleCaption.append(element('small', ' · Private', 'puzzle-access'));
+puzzleTab.append(puzzleIcon, puzzleCaption);
+$('collections').append(puzzleTab);
+
+
 async function updateCollectionCounts() {
-  const tabs = [...document.querySelectorAll('#collections .collection-tab')];
+  const tabs = [...document.querySelectorAll('#collections .collection-tab[data-kind]')];
   await Promise.allSettled(tabs.map(async tab => {
     const kind = tab.dataset.kind;
     const caption = tab.querySelector('.collection-caption');
