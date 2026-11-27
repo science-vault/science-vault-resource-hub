@@ -282,6 +282,13 @@ puzzleCaption.append(puzzleCount);
 puzzleTab.append(puzzleIcon, puzzleCaption);
 $('collections').append(puzzleTab);
 
+const builderTab = element('a', '', 'collection-tab');
+builderTab.href = 'https://science-vault-resource-hub.jjdcruz27.chatgpt.site/worksheet-builder';
+const builderIcon = element('span', '▤', 'collection-icon');
+builderIcon.setAttribute('aria-hidden', 'true');
+builderTab.append(builderIcon, element('strong', 'Worksheet Builder', 'collection-caption'));
+$('collections').append(builderTab);
+
 function loadPuzzleCount() {
   const origin = new URL(puzzleTab.href).origin;
   const frame = document.createElement('iframe');
