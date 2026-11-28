@@ -1,4 +1,4 @@
-import { catalog, arr, json, safeHTML, bankFile } from './practice-question-source.mjs?v=images-1';
+import { catalog, arr, json, safeHTML, bankFile } from './practice-question-source.mjs?v=diagram-crops-1';
 import { worksheetDocument } from './worksheet-document.mjs?v=images-1';
 
 const $ = id => document.getElementById(id);
@@ -266,7 +266,7 @@ async function generate(format) {
       preview.location.replace(url);
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } else {
-      const { wordWorksheet } = await import('./worksheet-word.mjs?v=1');
+      const { wordWorksheet } = await import('./worksheet-word.mjs?v=diagram-crops-1');
       const file = await wordWorksheet(markup);
       const url = URL.createObjectURL(file);
       const download = el('a');
