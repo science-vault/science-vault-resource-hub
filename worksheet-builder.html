@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#081725">
+<title>Worksheet Builder · Science Vault</title>
+<link rel="stylesheet" href="style.css?v=collection-filters-2">
+<link rel="stylesheet" href="worksheet-builder.css?v=hub-theme-1">
+<script defer src="https://science-vault.github.io/science-vault-wa/practice-studio-catalog.js"></script>
+<script type="module" src="worksheet-builder.mjs?v=word-1"></script>
+</head>
+<body>
+<a class="skip" href="#builder">Skip to worksheet filters</a>
+<header class="topbar"><div class="wrap topbar-inner">
+  <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">✳</span><span>Science Vault</span></a>
+  <nav class="top-nav" aria-label="Main navigation">
+    <a class="top-link" href="questions.html">Question Database</a>
+    <a class="top-link" href="worksheets.html">Browse worksheets</a>
+    <a class="top-link" href="./#catalogue">Resource catalogue</a>
+  </nav>
+</div></header>
+<main class="wrap builder-main">
+  <section class="intro builder-intro">
+    <div class="intro-copy">
+      <h1>Worksheet <span>Builder</span></h1>
+      <p class="intro-description">Choose questions from Practice Studio, then print your worksheet or save it as an A4 PDF.</p>
+      <p id="hero-badge-count" class="builder-bank-count">Loading questions…</p>
+    </div>
+    <div class="orbit" aria-hidden="true"><div class="orbit-ring outer"></div><div class="orbit-ring middle"></div><div class="orbit-ring inner"></div><div class="orbit-core"></div><i></i><i></i><i></i><i></i></div>
+  </section>
+  <section id="builder" class="catalogue" aria-labelledby="builder-title">
+    <div class="catalogue-head"><h2 id="builder-title">Select questions</h2></div>
+    <div class="filters builder-filters">
+      <label>Subject<select id="scope-subject" disabled><option value="">Choose a subject</option></select></label>
+      <label>Year<select id="scope-year" disabled><option value="">Choose a year</option></select></label>
+      <label>Unit or topic<select id="scope-unit" disabled><option value="">Choose a unit or topic</option></select></label>
+    </div>
+    <div class="filters builder-filters builder-refine" id="builder-filters" hidden>
+      <label>Question type<select id="filter-type"></select></label>
+      <label>Marks<select id="filter-marks"></select></label>
+      <label>Difficulty<select id="filter-band"></select></label>
+      <label>Topic<select id="filter-outcome"></select></label>
+    </div>
+    <div class="results-bar" id="builder-support" role="status"></div>
+    <div class="results-bar" id="builder-content" role="status">Loading the Practice Studio question bank…</div>
+    <div class="gen-tree" id="builder-tree-wrap" hidden></div>
+    <div class="gen-options" id="builder-options" hidden>
+      <label><input type="checkbox" id="opt-answer-space" checked> Answer space</label>
+      <label><input type="checkbox" id="opt-answer-key"> Answer key</label>
+      <span id="selection-count" class="gen-count" aria-live="polite">0 items selected</span>
+      <button type="button" class="builder-generate" id="generate-btn" disabled>Generate worksheet</button>
+      <button type="button" id="download-word" disabled>Download Word</button>
+      <p class="builder-note">Check the preview for shared diagrams, tables or earlier questions from the source paper before printing.</p>
+    </div>
+  </section>
+</main>
+</body>
+</html>
