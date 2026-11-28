@@ -1,3 +1,4 @@
+import { imageCrop } from './practice-question-source.mjs?v=diagram-crops-1';
 const libraryUrl = new URL('./vendor/docx-9.5.1.js', import.meta.url);
 let library;
 
@@ -23,14 +24,20 @@ async function rasterImage(img) {
   source.crossOrigin = 'anonymous';
   source.src = img.getAttribute('src');
   await source.decode();
-  const scale = Math.min(1, 1800 / Math.max(source.naturalWidth, source.naturalHeight));
+  const crop = imageCrop(img);
+  const xFactor = crop ? source.naturalWidth / crop.sourceWidth : 1;
+  const yFactor = crop ? source.naturalHeight / crop.sourceHeight : 1;
+  const sourceWidth = crop ? crop.width * xFactor : source.naturalWidth;
+  const sourceHeight = crop ? crop.height * yFactor : source.naturalHeight;
+  const scale = Math.min(1, 1800 / Math.max(sourceWidth, sourceHeight));
   const canvas = document.createElement('canvas');
-  canvas.width = Math.max(1, Math.round(source.naturalWidth * scale));
-  canvas.height = Math.max(1, Math.round(source.naturalHeight * scale));
-  canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
+  canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+  canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+  canvas.getContext('2d').drawImage(source, crop ? crop.x * xFactor : 0, crop ? crop.y * yFactor : 0,
+    sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
   if (!blob) throw new Error('A question diagram could not be converted.');
-  const displayScale = Math.min(1, (Number(img.getAttribute('width')) || 540) / canvas.width, 540 / canvas.width, 650 / canvas.height);
+  const displayScale = Math.min(1, (Number(img.getAttribute('data-display-width') || img.getAttribute('width')) || 540) / canvas.width, 540 / canvas.width, 650 / canvas.height);
   return {
     type: 'png',
     data: await blob.arrayBuffer(),
@@ -60,7 +67,7 @@ export async function wordWorksheet(markup, word = null, loadImage = rasterImage
     if (node.nodeType !== 1) return [];
     if (node.tagName === 'BR') return [new TextRun({ break: 1 })];
     if (node.tagName === 'IMG') {
-      const key = node.getAttribute('src') + '|' + node.getAttribute('width');
+      const key = [node.getAttribute('src'), node.getAttribute('width'), node.getAttribute('data-studio-crop'), node.getAttribute('data-display-width')].join('|');
       if (!images.has(key)) images.set(key, loadImage(node));
       try {
         return [new ImageRun(await images.get(key))];
