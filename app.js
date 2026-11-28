@@ -330,7 +330,7 @@ async function updateCollectionCounts() {
       if (kind === 'questions') {
         const base = 'https://science-vault.github.io/science-vault-wa/';
         if (!window.PracticeStudioCatalog) await new Promise((resolve,reject)=>{
-          const script=document.createElement('script');script.src=base+'practice-studio-catalog.js?v=2026.11.28-chemistry267';script.onload=resolve;script.onerror=reject;document.head.append(script);
+          const script=document.createElement('script');script.src=base+'practice-studio-catalog.js?v=2026.11.28-earthspace307';script.onload=resolve;script.onerror=reject;document.head.append(script);
         });
         const results=await Promise.allSettled(window.PracticeStudioCatalog.indices.map(file=>fetchCatalogue(base+file)));
         const ids=new Set();let missing=0;
