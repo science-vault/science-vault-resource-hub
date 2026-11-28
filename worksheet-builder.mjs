@@ -3,7 +3,7 @@ import { worksheetDocument } from './worksheet-document.mjs?v=images-1';
 
 const $ = id => document.getElementById(id);
 const collator = new Intl.Collator('en-AU', { numeric: true });
-const sort = values => [...new Set(values.filter(Boolean))].sort(collator.compare);
+
 const topics = row => [...arr(row.topics), ...arr(row.subtopics)];
 const units = row => arr(row.units).filter(unit => unit && unit !== 'Lower school');
 const scopes = row => units(row).length
@@ -66,18 +66,39 @@ function setScope(key, value) {
   render();
 }
 
-function renderDropdown(id, values, selected, placeholder, label = value => value) {
+function questionCounts(pool, read) {
+  const counts = new Map();
+  for (const row of pool) {
+    for (const value of new Set(read(row))) {
+      if (value) counts.set(value, (counts.get(value) || 0) + 1);
+    }
+  }
+  return counts;
+}
+
+function renderDropdown(id, counts, selected, placeholder, label = value => value) {
   const select = $(id);
-  select.replaceChildren(new Option(placeholder, ''), ...values.map(value => new Option(label(value), value)));
-  select.value = values.includes(selected) ? selected : '';
+  const values = [...counts.keys()].sort(collator.compare);
+  select.replaceChildren(new Option(placeholder, ''), ...values.map(value =>
+    new Option(label(value) + ' (' + counts.get(value).toLocaleString('en-AU') + ')', value)));
+  select.value = counts.has(selected) ? selected : '';
   select.disabled = !values.length;
+}
+
+function matchesFilters(row, except) {
+  return Object.entries(dimensions).every(([key, read]) =>
+    key === except || !filters[key] || read(row).includes(filters[key]));
 }
 
 function renderFilters(pool) {
   const placeholders = { type: 'All types', marks: 'All marks', band: 'All difficulties', outcome: 'All topics' };
   for (const [key, read] of Object.entries(dimensions)) {
-    const values = sort(pool.flatMap(read));
-    renderDropdown('filter-' + key, values, filters[key], placeholders[key], value =>
+    const eligible = pool.filter(row => matchesFilters(row, key));
+    const counts = questionCounts(pool, read);
+    const eligibleCounts = questionCounts(eligible, read);
+    for (const value of counts.keys()) counts.set(value, eligibleCounts.get(value) || 0);
+    const placeholder = placeholders[key] + ' (' + eligible.length.toLocaleString('en-AU') + ')';
+    renderDropdown('filter-' + key, counts, filters[key], placeholder, value =>
       key === 'marks' ? value + (value === '1' ? ' mark' : ' marks') : value);
   }
 }
@@ -146,8 +167,7 @@ function renderQuestions() {
   }
 
   renderFilters(pool);
-  const visible = pool.filter(row => Object.entries(dimensions).every(([key, read]) =>
-    !filters[key] || read(row).includes(filters[key])));
+  const visible = pool.filter(row => matchesFilters(row));
   if (!visible.length) {
     status('No questions match the active filters. Your selections are still available.');
     return;
@@ -167,11 +187,11 @@ function renderQuestions() {
 
 function render() {
   $('hero-badge-count').textContent = loading ? 'Loading…' : rows.length.toLocaleString('en-AU') + ' questions';
-  renderDropdown('scope-subject', sort(rows.map(row => row.subject)), scope.subject, 'Choose a subject');
+  renderDropdown('scope-subject', questionCounts(rows, row => [row.subject]), scope.subject, 'Choose a subject');
   const subjectRows = rows.filter(row => row.subject === scope.subject);
-  const years = sort(subjectRows.map(row => row.year == null ? '' : String(row.year)));
+  const years = questionCounts(subjectRows, row => row.year == null ? [] : [String(row.year)]);
   renderDropdown('scope-year', years, scope.year, 'Choose a year', value => 'Year ' + value);
-  const units = sort(subjectRows.filter(row => String(row.year) === scope.year).flatMap(scopes));
+  const units = questionCounts(subjectRows.filter(row => String(row.year) === scope.year), scopes);
   renderDropdown('scope-unit', units, scope.unit, 'Choose a unit or topic');
   renderQuestions();
   if (loading) status('Loading the Practice Studio question bank…');
